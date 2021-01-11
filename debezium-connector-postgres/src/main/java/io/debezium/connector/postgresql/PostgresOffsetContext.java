@@ -44,7 +44,8 @@ public class PostgresOffsetContext implements OffsetContext {
     private Lsn streamingStoppingLsn = null;
     private final TransactionContext transactionContext;
 
-    private PostgresOffsetContext(PostgresConnectorConfig connectorConfig, Lsn lsn, Lsn lastCompletelyProcessedLsn, Lsn lastCommitLsn, Long txId, Instant time,
+    private PostgresOffsetContext(PostgresConnectorConfig connectorConfig, Lsn lsn, Lsn txFinalLsn, Lsn lastCompletelyProcessedLsn, Lsn lastCommitLsn, Long txId,
+                                  Instant time,
                                   boolean snapshot,
                                   boolean lastSnapshotRecord, TransactionContext transactionContext) {
         partition = Collections.singletonMap(SERVER_PARTITION_KEY, connectorConfig.getLogicalName());
@@ -52,7 +53,7 @@ public class PostgresOffsetContext implements OffsetContext {
 
         this.lastCompletelyProcessedLsn = lastCompletelyProcessedLsn;
         this.lastCommitLsn = lastCommitLsn;
-        sourceInfo.update(lsn, time, txId, null, sourceInfo.xmin());
+        sourceInfo.update(lsn, txFinalLsn, time, txId, null, sourceInfo.xmin());
         sourceInfoSchema = sourceInfo.schema();
 
         this.lastSnapshotRecord = lastSnapshotRecord;
@@ -133,9 +134,9 @@ public class PostgresOffsetContext implements OffsetContext {
         sourceInfo.update(timestamp, tableId);
     }
 
-    public void updateWalPosition(Lsn lsn, Lsn lastCompletelyProcessedLsn, Instant commitTime, Long txId, TableId tableId, Long xmin) {
+    public void updateWalPosition(Lsn lsn, Lsn txFinalLsn, Lsn lastCompletelyProcessedLsn, Instant commitTime, Long txId, TableId tableId, Long xmin) {
         this.lastCompletelyProcessedLsn = lastCompletelyProcessedLsn;
-        sourceInfo.update(lsn, commitTime, txId, tableId, xmin);
+        sourceInfo.update(lsn, txFinalLsn, commitTime, txId, tableId, xmin);
     }
 
     public void updateCommitPosition(Lsn lsn, Lsn lastCompletelyProcessedLsn, Instant commitTime, Long txId, TableId tableId, Long xmin) {
@@ -205,6 +206,7 @@ public class PostgresOffsetContext implements OffsetContext {
         @Override
         public OffsetContext load(Map<String, ?> offset) {
             final Lsn lsn = Lsn.valueOf(readOptionalLong(offset, SourceInfo.LSN_KEY));
+            final Lsn txFinalLsn = Lsn.valueOf(readOptionalLong(offset, SourceInfo.TX_FINAL_LSN_KEY));
             final Lsn lastCompletelyProcessedLsn = Lsn.valueOf(readOptionalLong(offset, LAST_COMPLETELY_PROCESSED_LSN_KEY));
             final Lsn lastCommitLsn = Lsn.valueOf(readOptionalLong(offset, LAST_COMPLETELY_PROCESSED_LSN_KEY));
             final Long txId = readOptionalLong(offset, SourceInfo.TXID_KEY);
@@ -212,7 +214,7 @@ public class PostgresOffsetContext implements OffsetContext {
             final Instant useconds = Conversions.toInstantFromMicros((Long) offset.get(SourceInfo.TIMESTAMP_USEC_KEY));
             final boolean snapshot = (boolean) ((Map<String, Object>) offset).getOrDefault(SourceInfo.SNAPSHOT_KEY, Boolean.FALSE);
             final boolean lastSnapshotRecord = (boolean) ((Map<String, Object>) offset).getOrDefault(SourceInfo.LAST_SNAPSHOT_RECORD_KEY, Boolean.FALSE);
-            return new PostgresOffsetContext(connectorConfig, lsn, lastCompletelyProcessedLsn, lastCommitLsn, txId, useconds, snapshot, lastSnapshotRecord,
+            return new PostgresOffsetContext(connectorConfig, lsn, txFinalLsn, lastCompletelyProcessedLsn, lastCommitLsn, txId, useconds, snapshot, lastSnapshotRecord,
                     TransactionContext.load(offset));
         }
     }
@@ -239,6 +241,7 @@ public class PostgresOffsetContext implements OffsetContext {
             return new PostgresOffsetContext(
                     connectorConfig,
                     lsn,
+                    null,
                     lastCompletelyProcessedLsn,
                     lastCommitLsn,
                     txId,

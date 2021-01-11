@@ -201,7 +201,7 @@ public class PostgresStreamingChangeEventSource implements StreamingChangeEventS
                         return;
                     }
 
-                    offsetContext.updateWalPosition(lsn, lastCompletelyProcessedLsn, message.getCommitTime(), message.getTransactionId(), null,
+                    offsetContext.updateWalPosition(lsn, message.getTxFinalLsn(), lastCompletelyProcessedLsn, message.getCommitTime(), message.getTransactionId(), null,
                             taskContext.getSlotXmin(connection));
                     if (message.getOperation() == Operation.BEGIN) {
                         dispatcher.dispatchTransactionStartedEvent(Long.toString(message.getTransactionId()), offsetContext);
@@ -220,7 +220,8 @@ public class PostgresStreamingChangeEventSource implements StreamingChangeEventS
                         Objects.requireNonNull(tableId);
                     }
 
-                    offsetContext.updateWalPosition(lsn, lastCompletelyProcessedLsn, message.getCommitTime(), message.getTransactionId(), tableId,
+                    offsetContext.updateWalPosition(lsn, message.getTxFinalLsn(), lastCompletelyProcessedLsn, message.getCommitTime(), message.getTransactionId(),
+                            tableId,
                             taskContext.getSlotXmin(connection));
 
                     boolean dispatched = message.getOperation() != Operation.NOOP && dispatcher.dispatchDataChangeEvent(

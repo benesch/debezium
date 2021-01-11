@@ -73,6 +73,7 @@ public final class SourceInfo extends BaseSourceInfo {
 
     public static final String TIMESTAMP_USEC_KEY = "ts_usec";
     public static final String TXID_KEY = "txId";
+    public static final String TX_FINAL_LSN_KEY = "tx_final_lsn";
     public static final String XMIN_KEY = "xmin";
     public static final String LSN_KEY = "lsn";
     public static final String LAST_SNAPSHOT_RECORD_KEY = "last_snapshot_record";
@@ -80,6 +81,7 @@ public final class SourceInfo extends BaseSourceInfo {
     private final String dbName;
 
     private Lsn lsn;
+    private Lsn txFinalLsn;
     private Long txId;
     private Long xmin;
     private Instant timestamp;
@@ -103,8 +105,9 @@ public final class SourceInfo extends BaseSourceInfo {
      * @param xmin the xmin of the slot, may be null
      * @return this instance
      */
-    protected SourceInfo update(Lsn lsn, Instant commitTime, Long txId, TableId tableId, Long xmin) {
+    protected SourceInfo update(Lsn lsn, Lsn txFinalLsn, Instant commitTime, Long txId, TableId tableId, Long xmin) {
         this.lsn = lsn;
+        this.txFinalLsn = lsn;
         if (commitTime != null) {
             this.timestamp = commitTime;
         }
@@ -132,6 +135,10 @@ public final class SourceInfo extends BaseSourceInfo {
 
     public Lsn lsn() {
         return this.lsn;
+    }
+
+    public Lsn txFinalLsn() {
+        return this.txFinalLsn;
     }
 
     public Long xmin() {
@@ -172,6 +179,9 @@ public final class SourceInfo extends BaseSourceInfo {
         sb.append("db='").append(dbName).append('\'');
         if (lsn != null) {
             sb.append(", lsn=").append(lsn);
+        }
+        if (txFinalLsn != null) {
+            sb.append(", txFinalLsn=").append(txFinalLsn);
         }
         if (txId != null) {
             sb.append(", txId=").append(txId);

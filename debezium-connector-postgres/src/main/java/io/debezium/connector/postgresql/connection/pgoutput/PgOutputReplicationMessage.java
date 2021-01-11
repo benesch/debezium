@@ -23,14 +23,17 @@ public class PgOutputReplicationMessage implements ReplicationMessage {
     private Operation op;
     private Instant commitTimestamp;
     private long transactionId;
+    private Lsn txFinalLsn;
     private String table;
     private List<Column> oldColumns;
     private List<Column> newColumns;
 
-    public PgOutputReplicationMessage(Operation op, String table, Instant commitTimestamp, long transactionId, List<Column> oldColumns, List<Column> newColumns) {
+    public PgOutputReplicationMessage(Operation op, String table, Instant commitTimestamp, long transactionId, Lsn txFinalLsn, List<Column> oldColumns,
+                                      List<Column> newColumns) {
         this.op = op;
         this.commitTimestamp = commitTimestamp;
         this.transactionId = transactionId;
+        this.txFinalLsn = txFinalLsn;
         this.table = table;
         this.oldColumns = oldColumns;
         this.newColumns = newColumns;
@@ -49,6 +52,11 @@ public class PgOutputReplicationMessage implements ReplicationMessage {
     @Override
     public long getTransactionId() {
         return transactionId;
+    }
+
+    @Override
+    public Lsn getTxFinalLsn() {
+        return txFinalLsn;
     }
 
     @Override

@@ -72,6 +72,7 @@ public class SourceInfoTest {
                 .field("table", Schema.STRING_SCHEMA)
                 .field("txId", Schema.OPTIONAL_INT64_SCHEMA)
                 .field("lsn", Schema.OPTIONAL_INT64_SCHEMA)
+                .field("txn_final_lsn", Schema.OPTIONAL_INT64_SCHEMA)
                 .field("xmin", Schema.OPTIONAL_INT64_SCHEMA)
                 .build();
 

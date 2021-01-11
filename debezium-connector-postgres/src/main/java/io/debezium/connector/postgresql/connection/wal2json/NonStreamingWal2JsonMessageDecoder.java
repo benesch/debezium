@@ -67,17 +67,17 @@ public class NonStreamingWal2JsonMessageDecoder extends AbstractMessageDecoder {
             // WAL2JSON may send empty changes that still have a txid. These events are from things like vacuum,
             // materialized view, DDL, etc. They still need to be processed for the heartbeat to fire.
             if (changes.isEmpty()) {
-                processor.process(new TransactionMessage(Operation.BEGIN, txId, commitTime));
-                processor.process(new TransactionMessage(Operation.COMMIT, txId, commitTime));
+                processor.process(new TransactionMessage(Operation.BEGIN, txId, commitTime, null));
+                processor.process(new TransactionMessage(Operation.COMMIT, txId, commitTime, null));
             }
             else {
                 Iterator<Entry> it = changes.iterator();
-                processor.process(new TransactionMessage(Operation.BEGIN, txId, commitTime));
+                processor.process(new TransactionMessage(Operation.BEGIN, txId, commitTime, null));
                 while (it.hasNext()) {
                     Value value = it.next().getValue();
                     processor.process(new Wal2JsonReplicationMessage(txId, commitTime, value.asDocument(), containsMetadata, !it.hasNext(), typeRegistry));
                 }
-                processor.process(new TransactionMessage(Operation.COMMIT, txId, commitTime));
+                processor.process(new TransactionMessage(Operation.COMMIT, txId, commitTime, null));
             }
         }
         catch (final IOException e) {

@@ -171,6 +171,11 @@ public interface ReplicationMessage {
     boolean hasTypeMetadata();
 
     /**
+     * @return the final LSN of the transaction that contains this message
+     */
+    Lsn getTxFinalLsn();
+
+    /**
      * @return true if this is the last message in the batch of messages with same LSN
      */
     boolean isLastEventForLsn();

@@ -72,6 +72,11 @@ class PgProtoReplicationMessage implements ReplicationMessage {
     }
 
     @Override
+    public Lsn getTxFinalLsn() {
+        return null;
+    }
+
+    @Override
     public String getTable() {
         return rawMessage.getTable();
     }

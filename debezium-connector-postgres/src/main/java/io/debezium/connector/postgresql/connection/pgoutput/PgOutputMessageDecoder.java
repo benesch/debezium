@@ -61,6 +61,7 @@ public class PgOutputMessageDecoder extends AbstractMessageDecoder {
     private static final Instant PG_EPOCH = LocalDate.of(2000, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC);
     private static final byte SPACE = 32;
 
+    private Lsn txFinalLsn;
     private Instant commitTimestamp;
     private int transactionId;
 
@@ -220,7 +221,7 @@ public class PgOutputMessageDecoder extends AbstractMessageDecoder {
      * @param processor The replication message processor
      */
     private void handleBeginMessage(ByteBuffer buffer, ReplicationMessageProcessor processor) throws SQLException, InterruptedException {
-        final Lsn lsn = Lsn.valueOf(buffer.getLong()); // LSN
+        this.txFinalLsn = Lsn.valueOf(buffer.getLong()); // LSN
         this.commitTimestamp = PG_EPOCH.plus(buffer.getLong(), ChronoUnit.MICROS);
         this.transactionId = buffer.getInt();
         LOGGER.trace("Event: {}", MessageType.BEGIN);

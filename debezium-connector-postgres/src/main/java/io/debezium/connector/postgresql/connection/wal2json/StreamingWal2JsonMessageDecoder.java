@@ -156,7 +156,7 @@ public class StreamingWal2JsonMessageDecoder extends AbstractMessageDecoder {
                         commitTime = dateTime.systemTimestampToInstant(timestamp);
                         messageInProgress = true;
                         currentChunk = null;
-                        processor.process(new TransactionMessage(Operation.BEGIN, txId, commitTime));
+                        processor.process(new TransactionMessage(Operation.BEGIN, txId, commitTime, null));
                     }
                 }
             }
@@ -190,7 +190,7 @@ public class StreamingWal2JsonMessageDecoder extends AbstractMessageDecoder {
             // No more changes
             doProcessMessage(processor, typeRegistry, currentChunk, true);
             messageInProgress = false;
-            processor.process(new TransactionMessage(Operation.COMMIT, txId, commitTime));
+            processor.process(new TransactionMessage(Operation.COMMIT, txId, commitTime, null));
         }
         else {
             throw new ConnectException("Chunk arrived in unexpected state");
